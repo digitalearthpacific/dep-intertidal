@@ -39,7 +39,7 @@ def get_s2_ls(
     aoi: GeoDataFrame, year="2024", cloud_cover=50
 ) -> tuple[Dataset, Dataset]:
 
-    bbox = rasterio.features.bounds(aoi)
+    bbox = aoi.to_crs(4326).boundingbox.bbox
 
     common_options = {
         "chunks": {"x": 2048, "y": 2048},
