@@ -1,0 +1,10 @@
+.venv
+**/*.nc
+**/*.tif
+**/*.tiff
+**/*.gpkg
+**/*.geotif
+**/*.geotiff
+
+
+

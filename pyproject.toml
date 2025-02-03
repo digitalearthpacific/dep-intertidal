@@ -1,0 +1,21 @@
+[project]
+name = "dep-intertidal"
+version = "0.1.0"
+description = "Digital Earth Pacific (DEP) Product Development Environment"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "country-bounding-boxes>=0.2.3",
+    "datacube<1.9.0",
+    "dea-intertidal",
+    "dep-tools",
+    "numba==0.61.0",
+    "numpy==1.26.4",
+    "typer>=0.15.1",
+    "typing-extensions>=4.12.2",
+]
+
+[tool.uv.sources]
+dep-tools = { git = "https://github.com/digitalearthpacific/dep-tools.git" }
+dea-intertidal = { git = "https://github.com/GeoscienceAustralia/dea-intertidal.git", branch = "develop" }
