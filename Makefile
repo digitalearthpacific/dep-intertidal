@@ -1,7 +1,7 @@
 
 .ONESHELL:
 
-default: lab
+default: test
 
 lab:
 	BROWSER=firefox uv run --with jupyter jupyter-lab
@@ -16,10 +16,9 @@ upgrade:
 env:
 	. .venv/bin/activate
 
-backup:
-	rsync -az --delete --progress --exclude '*.nc' --exclude '__pycache__' --exclude '.ipynb_checkpoints' --exclude '*.pyc' --exclude '*.gpkg' --exclude 'dep_ls_coastlines*.gpkg' --exclude '*.tif' --exclude '.DS_Store' --exclude '.venv' . /Users/sachin/Dropbox/Projects/dep-projects
-	du -sh /Users/sachin/Dropbox/Projects/dep-projects
-
 docker:
 	docker build -t intertidal .
 	
+test:
+	uv run src/run.py --tile-id 77,19 --year 2024 --version 0.0.1
+
