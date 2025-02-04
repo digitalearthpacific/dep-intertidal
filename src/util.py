@@ -15,12 +15,15 @@ from pystac_client import Client
 from odc.stac import load
 import rasterio.features
 from intertidal.io import prepare_for_export
+import json
+import pyogrio
 
 catalog = "https://earth-search.aws.element84.com/v1"
 landsat_collection = "landsat-c2-l2"
 sentinel2_collection = "sentinel-2-l2a"
 tide_model = "FES2022"
 tide_model_dir = "tidal_models"
+
 
 def setup_tidal_models() -> None:
     print("Setting Up Pacific FES2022 Tidal Models...")
@@ -36,9 +39,10 @@ def setup_tidal_models() -> None:
 
 
 def get_s2_ls(
-    aoi: GeoDataFrame, year="2024", cloud_cover=50
+    aoi: GeoDataFrame, year="2024", cloud_cover=50, coastal_buffer=0.002
 ) -> tuple[Dataset, Dataset]:
 
+    #bbox = rasterio.features.bounds(aoi)
     bbox = aoi.to_crs(4326).boundingbox.bbox
 
     common_options = {
@@ -65,6 +69,8 @@ def get_s2_ls(
         query={"eo:cloud_cover": {"lt": cloud_cover}},
     ).item_collection()
 
+    print(f"S2 Items : {len(s2_items)} | LS Items : {len(ls_items)}")
+    
     # Load STAC Items
     ls_data = load(
         items=ls_items,
@@ -93,8 +99,21 @@ def get_s2_ls(
     ds_ls = (ls_data.where(ls_data.green != 0) * 0.0000275 + -0.2).clip(0, 1)
     ds_s2 = (s2_data.where(s2_data.green != 0) * 0.0001).clip(0, 1)
 
+    ds_ls = get_buffered_coastlines(ds_ls, coastal_buffer)
+    ds_s2 = get_buffered_coastlines(ds_s2, coastal_buffer)
+
     return ds_ls, ds_s2
 
+def get_buffered_coastlines(ds, buffer) -> GeoDataFrame:
+    #coastal buffer
+    pyogrio.set_gdal_config_options({"OGR_GEOJSON_MAX_OBJ_SIZE": 0})
+    url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/country_lines_{str(buffer)}.geojson"
+    geojson = f"country_lines_{str(buffer)}.geojson"
+    download_if_not_exists(url, geojson)
+    buffer = gpd.read_file(geojson)
+    buffer = buffer.to_crs(4326)
+    ds = ds.rio.clip(buffer.geometry.values, buffer.crs, drop=True, invert=False)
+    return ds
 
 def get_ndwi(ds_ls: Dataset, ds_s2: Dataset) -> Dataset:
     # Convert to NDWI
@@ -154,3 +173,21 @@ def write_locally(ds, tile_id, year) -> None:
     output_dir = f"data/{tile_id}/{year}"
     os.makedirs(output_dir, exist_ok=True)
     ds_prepared = prepare_for_export(ds, output_location=output_dir)
+
+def download_if_not_exists(url, filepath):
+    #Downloads a JSON file from a URL if it doesn't already exist locally.
+    if not os.path.exists(filepath):
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+            with open(filepath, mode="wb") as file:
+                for chunk in response.iter_content(chunk_size=10 * 1024):
+                    file.write(chunk)
+            print(f"GeoJSON file downloaded and saved to: {filepath}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading JSON: {e}")
+        except Exception as e:  # Catch other potential errors (like file writing)
+            print(f"An unexpected error occurred: {e}")
+    else:
+        pass
+    

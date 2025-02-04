@@ -29,18 +29,21 @@ from dea_tools.dask import create_local_dask_cluster
 import dep_tools.grids as grid
 import util
 
-# uv run intertidal/run.py --tile-id 77,19 --year 2024 --version 0.0.1
+# NIU uv run intertidal/run.py --tile-id 77,19 --year 2024 --version 0.0.1
+# NRU uv run intertidal/run.py --tile-id 50,41 --year 2024 --version 0.0.1
+
 
 # Main
 def main(
     tile_id: Annotated[str, typer.Option()],
     year: Annotated[str, typer.Option()],
     version: Annotated[str, typer.Option()],
+    coastal_buffer:Optional[float] = 0.002, #0.002 - 0.005
     cloud_cover: Optional[str] = "50",
     output_bucket: Optional[str] = "dep-public-staging",
     dataset_id: str = "intertidal",
-    base_product: str = "s2_ls",
-    memory_limit: str = "32GB",
+    base_product: str = "s2ls",
+    memory_limit: str = "64GB",
     workers: int = 4,
     threads_per_worker: int = 32,
 ) -> None:
@@ -68,7 +71,7 @@ def main(
     #aoi = gpd.read_file("coral_coast.geojson")
 
     log.info(f"{tile_id} [{year}]")
-    ds_ls, ds_s2 = util.get_s2_ls(aoi=aoi, year=year, cloud_cover=cloud_cover)
+    ds_ls, ds_s2 = util.get_s2_ls(aoi=aoi, year=year, cloud_cover=cloud_cover, coastal_buffer=coastal_buffer)
     ndwi = util.get_ndwi(ds_ls, ds_s2)
     ndwi = ndwi.compute()
 
@@ -82,7 +85,8 @@ def main(
     ds = util.cleanup(ds)
 
     #write locally
-    #util.write_locally(ds, tile_id=tile_id, year=year)
+    log.info("Saving Outputs Locally...")
+    util.write_locally(ds, tile_id=tile_id, year=year)
 
     #itempath
     itempath = S3ItemPath(
@@ -97,18 +101,19 @@ def main(
     output_data = set_stac_properties(
         ndwi, ds
     )
-    #data_writer = AwsDsCogWriter(itempath, write_multithreaded=True)
-    data_writer = LocalDsCogWriter(itempath=itempath)
+    data_writer = AwsDsCogWriter(itempath, write_multithreaded=True)
+    #data_writer = LocalDsCogWriter(itempath=itempath)
     paths = data_writer.write(output_data, tile_id)
     
     #stac_writer = AwsStacWriter(itempath)
-    stac_writer = LocalStackWriter(itempath)
+    stac_writer = LocalStacWriter(itempath)
 
+    
     stac_creator = StacCreator(
-        itempath=itempath, remote=False, make_hrefs_https=False, with_raster=True
+        itempath=itempath, remote=True, make_hrefs_https=True, with_raster=True
     )
     stac_item = stac_creator.process(output_data, tile_id)
-    stac_writer.write(stac_item, tile_id)
+    #stac_writer.write(stac_item, tile_id)
 
     #stac_document = itempath.stac_path(tile_id)
 
