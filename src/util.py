@@ -113,10 +113,11 @@ def get_s2_ls(
 def get_buffered_coastlines(ds, buffer) -> GeoDataFrame:
     # coastal buffer
     pyogrio.set_gdal_config_options({"OGR_GEOJSON_MAX_OBJ_SIZE": 0})
-    url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/country_lines_{str(buffer)}.geojson"
-    geojson = f"country_lines_{str(buffer)}.geojson"
-    download_if_not_exists(url, geojson)
-    buffer = gpd.read_file(geojson)
+    # url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/country_lines_{str(buffer)}.geojson"
+    url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/dep_country_lines_{str(buffer)}.gpkg"
+    geopkg = f"dep_country_lines_{str(buffer)}.gpkg"
+    download_if_not_exists(url, geopkg)
+    buffer = gpd.read_file(geopkg)
     buffer = buffer.to_crs(4326)
     ds = ds.rio.clip(buffer.geometry.values, buffer.crs, drop=True, invert=False)
     return ds
@@ -192,7 +193,7 @@ def download_if_not_exists(url, filepath):
             with open(filepath, mode="wb") as file:
                 for chunk in response.iter_content(chunk_size=10 * 1024):
                     file.write(chunk)
-            print(f"GeoJSON file downloaded and saved to: {filepath}")
+            print(f"Geo file downloaded and saved to: {filepath}")
         except requests.exceptions.RequestException as e:
             print(f"Error downloading JSON: {e}")
         except Exception as e:  # Catch other potential errors (like file writing)
