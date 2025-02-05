@@ -4,7 +4,7 @@ FROM --platform=${BUILDPLATFORM} ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
 ENV USE_PYGEOS=0
 
-#ADD intertidal /app
+ADD src /app
 ADD pyproject.toml /app/
 WORKDIR /app
 
@@ -19,6 +19,6 @@ RUN uv sync --compile-bytecode
 # Package FESS2022 Pacific Tidal Model In Build Process
 RUN uv run python -c "from util import *; setup_tidal_models()"
 
-CMD ["uv", "run", "run.py"]
+#CMD ["uv", "run", "run.py"]
 
 
