@@ -9,7 +9,8 @@ from dep_tools.aws import object_exists
 from dep_tools.grids import get_tiles
 from dep_tools.namers import S3ItemPath
 
-#python src/list.py --years 2024 --version 0.0.1 --regions FJI
+# python src/list.py --years 2024 --version 0.0.1 --regions FJI
+
 
 def main(
     years: Annotated[str, typer.Option()],
@@ -19,7 +20,7 @@ def main(
     limit: Optional[str] = None,
     base_product: str = "s2_ls",
     output_bucket: Optional[str] = "dep-public-staging",
-    #output_prefix: Optional[str] = None,
+    # output_prefix: Optional[str] = None,
     overwrite: Annotated[bool, typer.Option()] = False,
 ) -> None:
     country_codes = None if regions.upper() == "ALL" else regions.split(",")
@@ -31,7 +32,6 @@ def main(
     if limit is not None:
         limit = int(limit)
 
-    
     years = years.split("-")
     if len(years) == 2:
         years = range(int(years[0]), int(years[1]) + 1)
@@ -47,8 +47,6 @@ def main(
         for tile, year in product(list(tiles), years)
     ]
 
-    
-    
     if limit is not None:
         tasks = tasks[0:limit]
 

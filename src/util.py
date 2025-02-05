@@ -17,6 +17,7 @@ import rasterio.features
 from intertidal.io import prepare_for_export
 import json
 import pyogrio
+from pystac.extensions.projection import ProjectionExtension as proj
 
 catalog = "https://earth-search.aws.element84.com/v1"
 landsat_collection = "landsat-c2-l2"
@@ -27,11 +28,9 @@ tide_model_dir = "tidal_models"
 
 def setup_tidal_models() -> None:
     print("Setting Up Pacific FES2022 Tidal Models...")
-    #os.environ["PYTHONHTTPSVERIFY"] = "0"
+    # os.environ["PYTHONHTTPSVERIFY"] = "0"
     list_url = "https://dep-public-staging.s3.us-west-2.amazonaws.com/dep_ls_coastlines/raw/tidal_models/fes2022b/tide_data_urls.txt"
-    for item_url in requests.get(list_url, stream=True).iter_lines(
-        decode_unicode=True
-    ):
+    for item_url in requests.get(list_url, stream=True).iter_lines(decode_unicode=True):
         local_path = Path(re.sub("^.*(tidal_models.*)$", "\\1", item_url))
         if not local_path.exists():
             local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -42,7 +41,7 @@ def get_s2_ls(
     aoi: GeoDataFrame, year="2024", cloud_cover=50, coastal_buffer=0.002
 ) -> tuple[Dataset, Dataset]:
 
-    #bbox = rasterio.features.bounds(aoi)
+    # bbox = rasterio.features.bounds(aoi)
     bbox = aoi.to_crs(4326).boundingbox.bbox
 
     common_options = {
@@ -50,6 +49,7 @@ def get_s2_ls(
         "groupby": "solar_day",
         "resampling": {"qa_pixel": "nearest", "SCL": "nearest", "*": "cubic"},
         "fail_on_error": False,
+        # "crs": "utm",
     }
 
     client = Client.open(catalog)
@@ -70,7 +70,12 @@ def get_s2_ls(
     ).item_collection()
 
     print(f"S2 Items : {len(s2_items)} | LS Items : {len(ls_items)}")
-    
+
+    epsg_ls = proj.ext(ls_items[0]).epsg
+    epsg_s2 = proj.ext(s2_items[0]).epsg
+    # print(epsg_ls)
+    # print(epsg_s2)
+
     # Load STAC Items
     ls_data = load(
         items=ls_items,
@@ -104,8 +109,9 @@ def get_s2_ls(
 
     return ds_ls, ds_s2
 
+
 def get_buffered_coastlines(ds, buffer) -> GeoDataFrame:
-    #coastal buffer
+    # coastal buffer
     pyogrio.set_gdal_config_options({"OGR_GEOJSON_MAX_OBJ_SIZE": 0})
     url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/country_lines_{str(buffer)}.geojson"
     geojson = f"country_lines_{str(buffer)}.geojson"
@@ -114,6 +120,7 @@ def get_buffered_coastlines(ds, buffer) -> GeoDataFrame:
     buffer = buffer.to_crs(4326)
     ds = ds.rio.clip(buffer.geometry.values, buffer.crs, drop=True, invert=False)
     return ds
+
 
 def get_ndwi(ds_ls: Dataset, ds_s2: Dataset) -> Dataset:
     # Convert to NDWI
@@ -169,13 +176,15 @@ def cleanup(ds: Dataset) -> Dataset:
     ds = ds.rename_vars({"exposure_unfiltered": "exposure"})
     return ds
 
+
 def write_locally(ds, tile_id, year) -> None:
     output_dir = f"data/{tile_id}/{year}"
     os.makedirs(output_dir, exist_ok=True)
     ds_prepared = prepare_for_export(ds, output_location=output_dir)
 
+
 def download_if_not_exists(url, filepath):
-    #Downloads a JSON file from a URL if it doesn't already exist locally.
+    # Downloads a JSON file from a URL if it doesn't already exist locally.
     if not os.path.exists(filepath):
         try:
             response = requests.get(url, stream=True)
@@ -190,4 +199,3 @@ def download_if_not_exists(url, filepath):
             print(f"An unexpected error occurred: {e}")
     else:
         pass
-    

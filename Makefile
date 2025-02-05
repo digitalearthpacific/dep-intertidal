@@ -22,3 +22,5 @@ docker:
 test:
 	uv run src/run.py --tile-id 77,19 --year 2024 --version 0.0.1
 
+fmt:
+	black src/
