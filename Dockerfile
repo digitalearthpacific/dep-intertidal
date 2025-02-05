@@ -4,7 +4,7 @@ FROM --platform=${BUILDPLATFORM} ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
 ENV USE_PYGEOS=0
 
-ADD intertidal /app
+#ADD intertidal /app
 ADD pyproject.toml /app/
 WORKDIR /app
 
