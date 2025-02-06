@@ -79,6 +79,7 @@ def get_s2_ls(
     # Load STAC Items
     ls_data = load(
         items=ls_items,
+        crs="EPSG:3832",
         bbox=bbox,
         bands=["green", "nir08", "qa_pixel"],
         **common_options,
@@ -118,7 +119,7 @@ def get_buffered_coastlines(ds, buffer) -> GeoDataFrame:
     geopkg = f"dep_country_lines_{str(buffer)}.gpkg"
     download_if_not_exists(url, geopkg)
     buffer = gpd.read_file(geopkg)
-    buffer = buffer.to_crs(4326)
+    buffer = buffer.to_crs(3832)
     ds = ds.rio.clip(buffer.geometry.values, buffer.crs, drop=True, invert=False)
     return ds
 
