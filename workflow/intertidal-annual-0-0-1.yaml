@@ -26,6 +26,8 @@ spec:
         value: "latest" # The Docker image and code version
       - name: bucket
         value: "dep-public-staging" # The bucket to store the data
+      - name: regions
+        value: "NCL" # Comma separated list "FJI,TON" or 'ALL'
       #- name: overwrite
       #  value: "--no-overwrite" # Can be "--overwrite" or "--no-overwrite"
   templates:
@@ -37,7 +39,8 @@ spec:
             arguments:
               parameters:
                 - name: regions
-                  value: "NCL" # Comma separated list "FJI,TON" or 'ALL'
+                  value: "{{ workflow.parameters.regions }}"
+                #  value: "NCL" # Comma separated list "FJI,TON" or 'ALL'
                 #- name: limit
                 #  value: "999"
                 - name: years
