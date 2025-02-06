@@ -57,7 +57,7 @@ def main(
     log.info("Starting processing...")
 
     # dask and aws
-    #client = create_local_dask_cluster(return_client=True)
+    # client = create_local_dask_cluster(return_client=True)
     client = DaskClient(
         n_workers=workers,
         threads_per_worker=threads_per_worker,
@@ -96,8 +96,8 @@ def main(
     ds = util.cleanup(ds)
 
     # write locally
-    #log.info("Saving Outputs Locally...")
-    #util.write_locally(ds, tile_id=tile_id, year=year)
+    # log.info("Saving Outputs Locally...")
+    # util.write_locally(ds, tile_id=tile_id, year=year)
 
     # itempath
     itempath = S3ItemPath(

@@ -113,14 +113,17 @@ def get_s2_ls(
 
 def get_buffered_coastlines(ds, buffer) -> GeoDataFrame:
     # coastal buffer
-    pyogrio.set_gdal_config_options({"OGR_GEOJSON_MAX_OBJ_SIZE": 0})
+    # pyogrio.set_gdal_config_options({"OGR_GEOJSON_MAX_OBJ_SIZE": 0})
     # url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/country_lines_{str(buffer)}.geojson"
     url = f"https://dep-public-staging.s3.us-west-2.amazonaws.com/aoi/dep_country_lines_{str(buffer)}.gpkg"
     geopkg = f"dep_country_lines_{str(buffer)}.gpkg"
     download_if_not_exists(url, geopkg)
     buffer = gpd.read_file(geopkg)
     buffer = buffer.to_crs(3832)
-    ds = ds.rio.clip(buffer.geometry.values, buffer.crs, drop=True, invert=False)
+    try:
+        ds = ds.rio.clip(buffer.geometry.values, buffer.crs, drop=True, invert=False)
+    except:
+        pass
     return ds
 
 
