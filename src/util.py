@@ -12,12 +12,14 @@ from intertidal.io import prepare_for_export
 from intertidal.elevation import elevation
 from intertidal.exposure import exposure
 from pystac_client import Client
-from odc.stac import load
 import rasterio.features
 from intertidal.io import prepare_for_export
 import json
 import pyogrio
 from pystac.extensions.projection import ProjectionExtension as proj
+from dep_tools.searchers import PystacSearcher, LandsatPystacSearcher
+from dep_tools.loaders import OdcLoader as DEPLoader
+
 
 catalog = "https://earth-search.aws.element84.com/v1"
 landsat_collection = "landsat-c2-l2"
@@ -44,53 +46,40 @@ def get_s2_ls(
     # bbox = rasterio.features.bounds(aoi)
     bbox = aoi.to_crs(4326).boundingbox.bbox
 
-    common_options = {
-        "chunks": {"x": 2048, "y": 2048},
-        "groupby": "solar_day",
-        "resampling": {"qa_pixel": "nearest", "SCL": "nearest", "*": "cubic"},
-        "fail_on_error": False,
-        # "crs": "utm",
-    }
-
-    client = Client.open(catalog)
+    # client = Client.open(catalog)
 
     # Search for Landsat/S2 items
-    ls_items = client.search(
-        collections=[landsat_collection],
-        bbox=bbox,
+    searcher_ls = LandsatPystacSearcher(
+        catalog=catalog,
+        collections=landsat_collection,
         datetime=year,
+        # raise_empty_collection_error=False,
         query={"eo:cloud_cover": {"lt": cloud_cover}},
-    ).item_collection()
+    )
 
-    s2_items = client.search(
-        collections=[sentinel2_collection],
-        bbox=bbox,
+    searcher_s2 = PystacSearcher(
+        catalog=catalog,
+        collections=sentinel2_collection,
         datetime=year,
         query={"eo:cloud_cover": {"lt": cloud_cover}},
-    ).item_collection()
+    )
+
+    ls_items = searcher_ls.search(aoi)
+    s2_items = searcher_s2.search(aoi)
 
     print(f"S2 Items : {len(s2_items)} | LS Items : {len(ls_items)}")
 
-    epsg_ls = proj.ext(ls_items[0]).epsg
-    epsg_s2 = proj.ext(s2_items[0]).epsg
-    # print(epsg_ls)
-    # print(epsg_s2)
-
     # Load STAC Items
-    ls_data = load(
-        items=ls_items,
-        crs="EPSG:3832",
-        bbox=bbox,
-        bands=["green", "nir08", "qa_pixel"],
-        **common_options,
+    loader = DEPLoader(
+        # crs=3832,
+        # resolution=output_resolution,
+        chunks={"x": 2048, "y": 2048},
+        groupby="solar_day",
+        resampling={"qa_pixel": "nearest", "SCL": "nearest", "*": "cubic"},
+        fail_on_error=False,
     )
-
-    s2_data = load(
-        items=s2_items,
-        like=ls_data,
-        bands=["green", "nir", "scl"],
-        **common_options,
-    )
+    ls_data = loader.load(ls_items, aoi)
+    s2_data = loader.load(s2_items, aoi)
 
     # Cloud Mask
     bitflags = 0b00011000

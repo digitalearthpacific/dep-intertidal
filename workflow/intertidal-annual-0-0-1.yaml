@@ -28,10 +28,15 @@ spec:
         value: "dep-public-staging" # The bucket to store the data
       - name: regions
         value: "NCL" # Comma separated list "FJI,TON" or 'ALL'
+      - name: years
+        value: "2024" # One year "2022", or a period "2020-2021"
       #- name: overwrite
       #  value: "--no-overwrite" # Can be "--overwrite" or "--no-overwrite"
   templates:
     - name: workflow-entrypoint
+      retryStrategy:
+        limit: "3"
+        retryPolicy: "Always"
       dag:
         tasks:
           - name: generate-ids
@@ -40,11 +45,10 @@ spec:
               parameters:
                 - name: regions
                   value: "{{ workflow.parameters.regions }}"
-                #  value: "NCL" # Comma separated list "FJI,TON" or 'ALL'
                 #- name: limit
                 #  value: "999"
                 - name: years
-                  value: "2024" # One year "2022", or a period "2020-2021"
+                  value: "{{ workflow.parameters.years }}"
                 - name: version
                   value: "{{ workflow.parameters.version }}"
                 - name: bucket
