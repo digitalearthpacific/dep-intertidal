@@ -1,4 +1,4 @@
-name : Scripts Test and Push
+name: Scripts Test and Push
 
 env:
   REGISTRY: ghcr.io
@@ -17,7 +17,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -41,8 +40,8 @@ jobs:
           context: .
           push: false
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          #cache-from: type=gha
+          #cache-to: type=gha,mode=max
 
     # - name: Run tests in image
     #   run: |
@@ -58,7 +57,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-        
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -84,5 +83,5 @@ jobs:
           context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          #cache-from: type=gha
+          #cache-to: type=gha,mode=max
