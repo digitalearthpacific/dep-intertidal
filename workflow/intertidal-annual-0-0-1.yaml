@@ -23,7 +23,7 @@ spec:
       - name: base-product
         value: "s2ls"
       - name: image-tag
-        value: "0.0.1-10-g9493bf8" # The Docker image and code version
+        value: "0.0.1-11-g71b03fe" # The Docker image and code version
       - name: bucket
         value: "dep-public-staging" # The bucket to store the data
       - name: regions

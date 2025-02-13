@@ -70,16 +70,22 @@ def get_s2_ls(
     print(f"S2 Items : {len(s2_items)} | LS Items : {len(ls_items)}")
 
     # Load STAC Items
-    loader = DEPLoader(
-        # crs=3832,
-        # resolution=output_resolution,
+    loader_ls = DEPLoader(
         chunks={"x": 2048, "y": 2048},
         groupby="solar_day",
         resampling={"qa_pixel": "nearest", "SCL": "nearest", "*": "cubic"},
+        bands=["green", "nir08", "qa_pixel"],
         fail_on_error=False,
     )
-    ls_data = loader.load(ls_items, aoi)
-    s2_data = loader.load(s2_items, aoi)
+    loader_s2 = DEPLoader(
+        chunks={"x": 2048, "y": 2048},
+        groupby="solar_day",
+        resampling={"qa_pixel": "nearest", "SCL": "nearest", "*": "cubic"},
+        bands=["green", "nir", "scl"],
+        fail_on_error=False,
+    )
+    ls_data = loader_ls.load(ls_items, aoi)
+    s2_data = loader_s2.load(s2_items, aoi)
 
     # Cloud Mask
     bitflags = 0b00011000
