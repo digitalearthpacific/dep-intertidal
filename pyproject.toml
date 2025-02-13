@@ -18,5 +18,5 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-dep-tools = { git = "https://github.com/digitalearthpacific/dep-tools.git" }
+dep-tools = { git = "https://github.com/digitalearthpacific/dep-tools.git", tag = "0.4.0" }
 dea-intertidal = { git = "https://github.com/GeoscienceAustralia/dea-intertidal.git", branch = "develop" }

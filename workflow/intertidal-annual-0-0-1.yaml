@@ -23,11 +23,11 @@ spec:
       - name: base-product
         value: "s2ls"
       - name: image-tag
-        value: "0.0.1-8-g336fb78" # The Docker image and code version
+        value: "0.0.1-9-g034fb9e" # The Docker image and code version
       - name: bucket
         value: "dep-public-staging" # The bucket to store the data
       - name: regions
-        value: "FJI" # Comma separated list "FJI,TON" or 'ALL'
+        value: "NRU" # Comma separated list "FJI,TON" or 'ALL'
       - name: years
         value: "2024" # One year "2022", or a period "2020-2021"
       #- name: overwrite
