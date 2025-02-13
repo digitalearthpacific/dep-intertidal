@@ -40,8 +40,8 @@ jobs:
           context: .
           push: false
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
-          #cache-from: type=gha
-          #cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
     # - name: Run tests in image
     #   run: |
@@ -83,5 +83,5 @@ jobs:
           context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          #cache-from: type=gha
-          #cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
